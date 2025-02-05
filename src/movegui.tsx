@@ -115,7 +115,7 @@ async function createSubdir(subdir: string) {
     await Promise.all(movePromises);
 
     // show success toast only after all files are moved
-    await showHUD("${files.length} pictures have moved to ${subdir}!");
+    await showHUD(`${files.length} pictures have moved to ${subdir}!`);
 
   } catch (error) {
     console.error(error);
