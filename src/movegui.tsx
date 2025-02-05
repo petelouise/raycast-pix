@@ -131,9 +131,7 @@ function Command() {
 
   return (
     <List
-      filtering={true}
       onSearchTextChange={(newValue) => setState((previous) => ({ ...previous, searchText: newValue }))}
-      // onSelectionChange={(selectedItemId) => setState((previous) => ({ ...previous, selectedItemId, selectedItem: selectedItemId && subdirs.find((subdir) => subdir.id === selectedItemId) }))}
       actions={
         <ActionPanel>
           <Action
@@ -150,8 +148,21 @@ function Command() {
           description="you could make some subdirs in your pictures folder..."
         />
       )}
+      {state.searchText.length > 0 && !subdirs.some((subdir) => subdir.file === state.searchText) && (
+        <List.Item
+          id={state.searchText}
+          key={state.searchText}
+          title={state.searchText}
+          subtitle={"create new subdir"}
+          actions={
+            <ActionPanel>
+              <Action title={`move to ${state.searchText}`} onAction={() => createSubdir(state.searchText)} />
+            </ActionPanel>
+          }
+        />
+      )}
 
-      {subdirs.map((subdir) => (
+      {subdirs.filter((subdir) => subdir.file.includes(state.searchText)).map((subdir) => (
         <List.Item
           id={subdir.id}
           key={subdir.path}
@@ -188,24 +199,3 @@ function Command() {
 }
 
 export default withAccessToPicturesDir(Command);
-
-// export default function Command() {
-//   return (
-//     <List>
-//       {ITEMS.map((item) => (
-//         <List.Item
-//           key={item.id}
-//           icon={item.icon}
-//           title={item.title}
-//           subtitle={item.subtitle}
-//           accessories={[{ icon: Icon.Text, text: item.accessory }]}
-//           actions={
-//             <ActionPanel>
-//               <Action.CopyToClipboard content={item.title} />
-//             </ActionPanel>
-//           }
-//         />
-//       ))}
-//     </List>
-//   );
-// }
