@@ -1,7 +1,7 @@
 import { Action, ActionPanel, closeMainWindow, Detail, getPreferenceValues, getSelectedFinderItems, Icon, List, showHUD } from "@raycast/api";
 import { accessSync, constants, existsSync, mkdirSync, readdirSync, rename, statSync } from "fs";
 import { homedir } from "os";
-import { basename, join, extname } from "path";
+import { basename, extname, join } from "path";
 import { ComponentType, useState } from "react";
 import { promisify } from "util";
 
@@ -10,18 +10,7 @@ import { promisify } from "util";
 const renameAsync = promisify(rename);
 const preferences = getPreferenceValues();
 preferences.picturesDir = join(homedir(), "Dropbox/pictures")
-const picturesDir = preferences.picturesDir;
-const fileOrder = preferences.fileOrder;
-
-const ITEMS = Array.from(Array(3).keys()).map((key) => {
-  return {
-    id: key,
-    icon: Icon.Bird,
-    title: "Title " + key,
-    subtitle: "Subtitle",
-    accessory: "Accessory",
-  };
-});
+const {picturesDir, fileOrder} = preferences;
 
 function getFileCount(dirPath: string): number {
   try {
@@ -45,6 +34,7 @@ export function getSubdirs() {
         file,
         path,
         id: `subdir-${index}`,
+        count: getFileCount(path),
         isDirectory: stats.isDirectory(),
         lastModifiedAt: stats.mtime,
         createdAt: stats.ctime,
@@ -99,10 +89,11 @@ export const withAccessToPicturesDir = <P extends object>(Component: ComponentTy
   };
 };
 
-async function createSubdir(subdir: string) {
-  const targetDirPath = join(picturesDir, subdir);
-  console.log("creating subdir", targetDirPath);
+async function moveSelectedToSubdir(subdir: string) {
   closeMainWindow();
+
+  const targetDirPath = join(picturesDir, subdir);
+
   try {
     // create the directory if it doesn't exist
     if (!existsSync(targetDirPath)) {
@@ -148,7 +139,7 @@ function Command() {
         <ActionPanel>
           <Action
             title="create subdir"
-            onAction={() => createSubdir(state.searchText)}
+            onAction={() => moveSelectedToSubdir(state.searchText)}
           />
         </ActionPanel>
       }
@@ -166,9 +157,10 @@ function Command() {
           key={state.searchText}
           title={state.searchText}
           subtitle={"create new subdir"}
+          icon={{ source: Icon.PlusCircle }}
           actions={
             <ActionPanel>
-              <Action title={`move to ${state.searchText}`} onAction={() => createSubdir(state.searchText)} />
+              <Action title={`move to ${state.searchText}`} onAction={() => moveSelectedToSubdir(state.searchText)} />
             </ActionPanel>
           }
         />
@@ -179,32 +171,32 @@ function Command() {
           id={subdir.id}
           key={subdir.path}
           title={subdir.file}
-          icon={{ fileIcon: subdir.path }}
-          quickLook={{ path: subdir.path, name: subdir.file }}
+          // icon={{ source: Icon.Humidity }}
+          icon={{ source: Icon.Folder }}
           accessories={[
             {
               date: subdir.lastModifiedAt,
               tooltip: `Last modified: ${subdir.lastModifiedAt.toLocaleString()}`,
             },
             {
-              text: `${getFileCount(subdir.path)} images`,
-              tooltip: "Number of image files in directory",
+              text: `${subdir.count} images`,
+              tooltip: `${subdir.count} image files in directory`,
             },
           ]}
           actions={
             <ActionPanel>
               <ActionPanel.Section>
-                <Action title={`Move to ${subdir.file}`} onAction={() => createSubdir(subdir.file)} />
+                <Action title={`Move Selected to ${subdir.file}`} onAction={() => moveSelectedToSubdir(subdir.file)} />
                 <Action.ShowInFinder path={subdir.path} />
                 <Action.CopyToClipboard
-                  title="Copy File"
+                  title="Copy Subdir Path"
                   content={{ file: subdir.path }}
                   shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
                 />
               </ActionPanel.Section>
               <ActionPanel.Section>
                 <Action.OpenWith path={subdir.path} shortcut={{ modifiers: ["cmd"], key: "o" }} />
-                <Action.ToggleQuickLook shortcut={{ modifiers: ["cmd"], key: "y" }} />
+                {/* <Action.ToggleQuickLook shortcut={{ modifiers: ["cmd"], key: "y" }} /> */}
               </ActionPanel.Section>
             </ActionPanel>
           }
