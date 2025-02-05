@@ -1,7 +1,7 @@
 import { Action, ActionPanel, closeMainWindow, Detail, getPreferenceValues, getSelectedFinderItems, Icon, List, showHUD } from "@raycast/api";
 import { accessSync, constants, existsSync, mkdirSync, readdirSync, rename, statSync } from "fs";
 import { homedir } from "os";
-import { basename, join } from "path";
+import { basename, join, extname } from "path";
 import { ComponentType, useState } from "react";
 import { promisify } from "util";
 
@@ -22,6 +22,18 @@ const ITEMS = Array.from(Array(3).keys()).map((key) => {
     accessory: "Accessory",
   };
 });
+
+function getFileCount(dirPath: string): number {
+  try {
+    return readdirSync(dirPath).filter(file => {
+      const ext = extname(file).toLowerCase();
+      return ['.jpg', '.jpeg', '.png', '.gif', '.heic'].includes(ext);
+    }).length;
+  } catch (error) {
+    console.error('Error counting files:', error);
+    return 0;
+  }
+}
 
 export function getSubdirs() {
   const files = readdirSync(picturesDir);
@@ -173,6 +185,10 @@ function Command() {
             {
               date: subdir.lastModifiedAt,
               tooltip: `Last modified: ${subdir.lastModifiedAt.toLocaleString()}`,
+            },
+            {
+              text: `${getFileCount(subdir.path)} images`,
+              tooltip: "Number of image files in directory",
             },
           ]}
           actions={
