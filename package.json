@@ -31,7 +31,14 @@
       "description": "",
       "mode": "view"
     }
-  ],
+  ,
+    {
+      "name": "grab-first-last-frames",
+      "title": "grab first/last frames",
+      "description": "saves the first and last video frames as an image",
+      "mode": "no-view"
+    }
+      ],
   "dependencies": {
     "@raycast/api": "^1.90.0",
     "@raycast/utils": "^1.17.0"
